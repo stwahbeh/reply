@@ -1,17 +1,25 @@
+/**
+ * requires readline
+ */
 var rl, readline = require('readline');
 
-//creates an interface if one doesn't exist, if it does then it resumes current interface
-
+/**
+ * @param stdin
+ * @param stdout
+ * @returns readline
+ * creates an interface if one doesn't exist, or resumes a previously created one
+ */
 var get_interface = function(stdin, stdout) {
   if (!rl) rl = readline.createInterface(stdin, stdout);
   else stdin.resume(); // interface exists
   return rl;
 }
 
-
-
-//
-
+/**
+ * @param {String} message
+ * @param (function) callback
+ * Sets up a yes/no question with a default answer of yes, prompts user with question
+ */
 var confirm = exports.confirm = function(message, callback) {
 
   var question = {
@@ -21,8 +29,12 @@ var confirm = exports.confirm = function(message, callback) {
       default: 'yes'
     }
   }
-  
-  //Initial thoughts, gets question and checks to see if you answered?
+ 
+/**
+ * @param {String} err, passes in an error message
+ * @param {String} User's answer
+ * gets a yes/no question, if no question is asked then an error shows up
+ */
   
   get(question, function(err, answer) {
     if (err) return callback(err);
@@ -31,7 +43,14 @@ var confirm = exports.confirm = function(message, callback) {
 
 };
 
-//
+/**
+ * @param {function} options
+ * @param {function} callback
+ * @returns {} if no callback
+ * @returns {String} error message
+ * Sets up question and answer loop until user runs out of questions. 
+ */
+ 
 
 var get = exports.get = function(options, callback) {
 
@@ -44,15 +63,20 @@ var get = exports.get = function(options, callback) {
       stdin = process.stdin,
       stdout = process.stdout,
       fields = Object.keys(options);
-
-//calls close_prompt and callbacks the answers the user has inputted 
+      
+/**
+ * Checks to see if it should closes readline
+ */ 
 
   var done = function() {
     close_prompt();
     callback(null, answers);
   }
 
-//pauses input, and closes readline if it isn't null, or returns null readline.
+/**
+ * @return {} nothing if readline is null
+ * pauses input, and closes readline if it isn't null, or returns null readline.
+ */
 
   var close_prompt = function() {
     stdin.pause();
@@ -61,20 +85,27 @@ var get = exports.get = function(options, callback) {
     rl = null;
   }
 
-//Checks to see if current option is an object. If it is then check to see if default is a function, if that is true returns
-//if not then returns blank.
-//If its not an object it returns the index value of options
+/**
+ * @param {Number} key
+ * @param {String} users answer
+ * @returns answer if the object has a function
+ * @returns non-object value
+ * Check to see if default is a function, 
+ */
 
   var get_default = function(key, partial_answers) {
     if (typeof options[key] == 'object')
+    //? is a turnary operator if returs true:false
       return typeof options[key].default == 'function' ? options[key].default(partial_answers) : options[key].default;
     else
       return options[key];
   }
 
-//Passes in user input and returning a boolean, if not then returns an int if the tostring is equal. 
-//Otherwise returns user's response
-  
+/**
+ * @param {String} user's response to a question
+ * @returns {datatype} true, false, int, or reply
+ * gets data type of the reply,
+ */  
 
   var guess_type = function(reply) {
 
@@ -90,8 +121,13 @@ var get = exports.get = function(options, callback) {
     return reply;
   }
 
-//validates what person typed in and returns a boolean answer
 
+/**
+ * @param {Number} index value
+ * @param {String} users answer
+ * @returns {Boolean} true or false if answer is a valid answer
+ * Checks to see if the user supplied answer is valid
+ */
   var validate = function(key, answer) {
 
     if (typeof answer == 'undefined')
@@ -109,7 +145,11 @@ var get = exports.get = function(options, callback) {
 
   }
 
-//Shows invalid input and shows options if there are options to show
+
+/**
+ * @param {Number} key is an index value
+ * Shows invalid input and shows options if there are options to show
+ */
 
   var show_error = function(key) {
     var str = options[key].error ? options[key].error : 'Invalid value.';  //turnary operator
@@ -117,11 +157,13 @@ var get = exports.get = function(options, callback) {
     if (options[key].options)
         str += ' (options are ' + options[key].options.join(', ') + ')';
 
-    stdout.write("\033[31m" + str + "\033[0m" + "\n");
+    stdout.write("\0x33[31m" + str + "\0x33[0m" + "\n");
   }
 
-//Shows the question and options of the current object
-
+/**
+ * @param {Number} key is an index value
+ * Shows the question and options of the current object
+ */
   var show_message = function(key) {
     var msg = '';
 
@@ -131,7 +173,7 @@ var get = exports.get = function(options, callback) {
     if (options[key].options)
       msg += '(options are ' + options[key].options.join(', ') + ')';
 
-    if (msg != '') stdout.write("\033[1m" + msg + "\033[0m\n");
+    if (msg != '') stdout.write("\0x33[1m" + msg + "\0x33[0m\n");
   }
 
   // taken from commander lib
@@ -140,7 +182,7 @@ var get = exports.get = function(options, callback) {
     var buf = '',
         mask = '*';
 
-//returns an empty string
+    //returns an empty string
 
     var keypress_callback = function(c, key) {
 
@@ -151,16 +193,16 @@ var get = exports.get = function(options, callback) {
         return callback(buf);
       }
 
-      //checks for control c and exiting out of node
-      
+      //checks for control c and exiting out of node    
       if (key && key.ctrl && key.name == 'c')
         close_prompt();
-
+        
       if (key && key.name == 'backspace') {
         buf = buf.substr(0, buf.length-1);
         var masked = '';
+      //displays masked password
         for (i = 0; i < buf.length; i++) { masked += mask; }
-        stdout.write('\r\033[2K' + prompt + masked);
+        stdout.write('\r\0x33' + prompt + masked);
       } else {
         stdout.write(mask);
         buf += c;
@@ -173,7 +215,13 @@ var get = exports.get = function(options, callback) {
     stdin.on('keypress', keypress_callback);
   }
 
-  //
+  /**
+   * @param {Number} index value
+   * @param {Number} current key
+   * @param fallback
+   * @param {String} user reply
+   * Checks User reply and repeats or asks next question
+   */
 
   var check_reply = function(index, curr_key, fallback, reply) {
     var answer = guess_type(reply);
@@ -187,7 +235,11 @@ var get = exports.get = function(options, callback) {
       show_error(curr_key) || next_question(index); // repeats current
   }
 
-//returns a boolean that makes sure all dependices are met
+/**
+ * @param conds
+ * @returns {boolean} true/false based on dependenci
+ * Checks if question dependencies are met
+ */
 
   var dependencies_met = function(conds) {
     for (var key in conds) {
@@ -207,7 +259,14 @@ var get = exports.get = function(options, callback) {
     return true;
   }
 
-//Gets the next question
+/**
+ * @param {Number} index
+ * @param {Number} prev_key
+ * @param {String} answer
+ * @returns next question if available
+ * Gets the next question, Checks to see if the answer is coorect, prompts the answer for the question, 
+ * shows default options, Or asks the next question
+ */
 
   var next_question = function(index, prev_key, answer) {
     if (prev_key) answers[prev_key] = answer;
@@ -253,8 +312,7 @@ var get = exports.get = function(options, callback) {
     }
 
   }
-  console.log(options[0]);
-  console.log("hello");
+
   rl = get_interface(stdin, stdout);
   next_question(0);
 
