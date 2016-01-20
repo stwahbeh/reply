@@ -1,10 +1,10 @@
 var reply = require('./../');
 
-reply.confirm('Are you sure you want to do this?', function(err, yes){
+reply.confirm('Deleting these files will erase them permanently. Would you like to continue?', function(err, yes){
 
   if (!err && yes)
-    console.log("Then let's get on with it!");
+    console.log("Files have been deleted");
   else
-    console.log("Boo. Maybe next time.");
+    console.log("Deltion aborted");
 
 });

@@ -1,10 +1,16 @@
 var rl, readline = require('readline');
 
+//creates an interface if one doesn't exist, if it does then it resumes current interface
+
 var get_interface = function(stdin, stdout) {
   if (!rl) rl = readline.createInterface(stdin, stdout);
   else stdin.resume(); // interface exists
   return rl;
 }
+
+
+
+//
 
 var confirm = exports.confirm = function(message, callback) {
 
@@ -15,13 +21,17 @@ var confirm = exports.confirm = function(message, callback) {
       default: 'yes'
     }
   }
-
+  
+  //Initial thoughts, gets question and checks to see if you answered?
+  
   get(question, function(err, answer) {
     if (err) return callback(err);
     callback(null, answer.reply === true || answer.reply == 'yes');
   });
 
 };
+
+//
 
 var get = exports.get = function(options, callback) {
 
@@ -35,10 +45,14 @@ var get = exports.get = function(options, callback) {
       stdout = process.stdout,
       fields = Object.keys(options);
 
+//calls close_prompt and callbacks the answers the user has inputted 
+
   var done = function() {
     close_prompt();
     callback(null, answers);
   }
+
+//pauses input, and closes readline if it isn't null, or returns null readline.
 
   var close_prompt = function() {
     stdin.pause();
@@ -47,12 +61,20 @@ var get = exports.get = function(options, callback) {
     rl = null;
   }
 
+//Checks to see if current option is an object. If it is then check to see if default is a function, if that is true returns
+//if not then returns blank.
+//If its not an object it returns the index value of options
+
   var get_default = function(key, partial_answers) {
     if (typeof options[key] == 'object')
       return typeof options[key].default == 'function' ? options[key].default(partial_answers) : options[key].default;
     else
       return options[key];
   }
+
+//Passes in user input and returning a boolean, if not then returns an int if the tostring is equal. 
+//Otherwise returns user's response
+  
 
   var guess_type = function(reply) {
 
@@ -67,6 +89,8 @@ var get = exports.get = function(options, callback) {
 
     return reply;
   }
+
+//validates what person typed in and returns a boolean answer
 
   var validate = function(key, answer) {
 
@@ -85,14 +109,18 @@ var get = exports.get = function(options, callback) {
 
   }
 
+//Shows invalid input and shows options if there are options to show
+
   var show_error = function(key) {
-    var str = options[key].error ? options[key].error : 'Invalid value.';
+    var str = options[key].error ? options[key].error : 'Invalid value.';  //turnary operator
 
     if (options[key].options)
         str += ' (options are ' + options[key].options.join(', ') + ')';
 
     stdout.write("\033[31m" + str + "\033[0m" + "\n");
   }
+
+//Shows the question and options of the current object
 
   var show_message = function(key) {
     var msg = '';
@@ -112,6 +140,8 @@ var get = exports.get = function(options, callback) {
     var buf = '',
         mask = '*';
 
+//returns an empty string
+
     var keypress_callback = function(c, key) {
 
       if (key && (key.name == 'enter' || key.name == 'return')) {
@@ -121,6 +151,8 @@ var get = exports.get = function(options, callback) {
         return callback(buf);
       }
 
+      //checks for control c and exiting out of node
+      
       if (key && key.ctrl && key.name == 'c')
         close_prompt();
 
@@ -136,18 +168,26 @@ var get = exports.get = function(options, callback) {
 
     };
 
+    //builds on current string
+    
     stdin.on('keypress', keypress_callback);
   }
+
+  //
 
   var check_reply = function(index, curr_key, fallback, reply) {
     var answer = guess_type(reply);
     var return_answer = (typeof answer != 'undefined') ? answer : fallback;
 
+    //checks to see if answer is valid, if yes goes to next question, if not then repeats question
+    
     if (validate(curr_key, answer))
       next_question(++index, curr_key, return_answer);
     else
       show_error(curr_key) || next_question(index); // repeats current
   }
+
+//returns a boolean that makes sure all dependices are met
 
   var dependencies_met = function(conds) {
     for (var key in conds) {
@@ -166,6 +206,8 @@ var get = exports.get = function(options, callback) {
 
     return true;
   }
+
+//Gets the next question
 
   var next_question = function(index, prev_key, answer) {
     if (prev_key) answers[prev_key] = answer;
@@ -186,6 +228,8 @@ var get = exports.get = function(options, callback) {
       prompt += "[" + fallback + "] ";
 
     show_message(curr_key);
+
+    //checks to see if we are inputting answer, if not then we loop through question and answer
 
     if (options[curr_key].type == 'password') {
 
@@ -209,7 +253,8 @@ var get = exports.get = function(options, callback) {
     }
 
   }
-
+  console.log(options[0]);
+  console.log("hello");
   rl = get_interface(stdin, stdout);
   next_question(0);
 
@@ -222,5 +267,8 @@ var get = exports.get = function(options, callback) {
     var err = new Error("Cancelled after giving " + given_answers + " answers.");
     callback(err, answers);
   });
+  
+  
+  
 
 }

@@ -1,6 +1,7 @@
 {
   "author": "Tomás Pollak <tomas@forkhq.com> (http://forkhq.com)",
   "name": "reply",
+  "main": "index.js",
   "description": "Create console-based wizards in a snap.",
   "tags" : ["reply", "prompt", "console", "wizard", "input"],
   "version": "0.3.0",
